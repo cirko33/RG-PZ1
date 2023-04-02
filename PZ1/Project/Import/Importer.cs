@@ -25,6 +25,7 @@ namespace Project.Import
             PM.OffsetX = PM.Size / (PM.MaxX - PM.MinX);
             PM.OffsetY = PM.Size / (PM.MaxY - PM.MinY);
         }
+
         public static void Load() 
         {
             XmlDocument xml = new XmlDocument();

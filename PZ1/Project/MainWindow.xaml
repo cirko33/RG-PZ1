@@ -7,13 +7,28 @@
         mc:Ignorable="d"
         Title="RACUNARSKA GRAFIKA PZ1" Height="800" Width="1000">
     <DockPanel>
+        <Menu DockPanel.Dock="Top" BorderBrush="Gray" BorderThickness="0.3">
+            <Menu.Resources>
+                <Style TargetType="{x:Type MenuItem}">
+                    <Setter Property="BorderBrush" Value="Gray" />
+                    <Setter Property="BorderThickness" Value="0,0,0.3,0" />
+                </Style>
+            </Menu.Resources>
+            <MenuItem x:Name="LoadModel" Header="Load Model" Click="LoadModel_Click"/>
+            <MenuItem x:Name="DrawEllipseMenu" Header="Draw Ellipse" Click="DrawEllipseMenu_Click"/>
+            <MenuItem x:Name="DrawPolygonMenu" Header="Draw Polygon" Click="DrawPolygonMenu_Click"/>
+            <MenuItem x:Name="AddTextMenu" Header="Add text" Click="AddTextMenu_Click"/>
+            <MenuItem Header="Undo" Command="ApplicationCommands.Undo"/>
+            <MenuItem Header="Redo" Command="ApplicationCommands.Redo"/>
+            <MenuItem Header="Clear" Command="{Binding ClearCommand}"/>
+        </Menu>
         <Slider x:Name="Zoom" Minimum="0.1" Maximum="10" Value="1" DockPanel.Dock="Left">
             <Slider.LayoutTransform>
                 <RotateTransform Angle="270"></RotateTransform>
             </Slider.LayoutTransform>
         </Slider>
         <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
-            <Canvas x:Name="MainCanvas" DockPanel.Dock="Bottom" Height="1000" Width="1000" Focusable="True">
+            <Canvas x:Name="MainCanvas" DockPanel.Dock="Bottom" Height="1000" Width="1000" Focusable="True" Background="LightGray">
                 <Canvas.LayoutTransform>
                     <ScaleTransform x:Name="ScaleTransform" 
                                     ScaleX="{Binding ElementName=Zoom, Path=Value}"

@@ -13,6 +13,12 @@ namespace Project.Classes
 
         public Point() { }
 
+        public Point(double x, double y)
+        {
+            X = x;
+            Y = y;
+        }
+
         public double X { get => x; set => x = value; }
         public double Y { get => y; set => y = value; }
     }
