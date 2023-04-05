@@ -15,7 +15,7 @@ namespace Project.Classes
         public static double OffsetX { get; set; }
         public static double OffsetY { get; set; }
         public static int Size { get; set; }
-
-        public static int Move { get; set; }
+        public static int MoveX { get; set; }
+        public static int MoveY { get; set; }
     }
 }

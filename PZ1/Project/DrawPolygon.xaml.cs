@@ -19,6 +19,8 @@ namespace Project
     /// </summary>
     public partial class DrawPolygon : Window
     {
+        private Polygon p = null;
+        private TextBlock tb = null;
         public SolidColorBrush Fill { get; set; }
         public SolidColorBrush Stroke { get; set; }
         public double StrokeThickness { get; set; }
@@ -32,10 +34,32 @@ namespace Project
             textColor.SelectedColor = Colors.Black;
         }
 
+        public DrawPolygon(Polygon polygon, TextBlock text)
+        {
+            InitializeComponent();
+            p = polygon;
+            tb = text;
+            strokeThickness.Text = polygon.StrokeThickness.ToString();
+            strokeColor.SelectedColor = ((SolidColorBrush)polygon.Stroke).Color;
+            fillColor.SelectedColor = ((SolidColorBrush)polygon.Fill).Color;
+            textColor.SelectedColor = ((SolidColorBrush)text.Foreground).Color;
+            textBox.Text = text.Text;
+        }
+
         private void drawPolygonButton_Click(object sender, RoutedEventArgs e)
         {
-            if (fillColor.SelectedColor == null || strokeColor.SelectedColor == null || strokeThickness == null
-                )
+            if (p != null)
+            {
+                p.Fill = new SolidColorBrush(fillColor.SelectedColor ?? Colors.Black);
+                p.Stroke = new SolidColorBrush(strokeColor.SelectedColor ?? Colors.Black);
+                p.StrokeThickness = double.Parse(strokeThickness.Text);
+                tb.Text = textBox.Text;
+                tb.Foreground = new SolidColorBrush(textColor.SelectedColor ?? Colors.Black);
+                Close();
+                return;
+            }
+
+            if (fillColor.SelectedColor == null || strokeColor.SelectedColor == null || strokeThickness == null)
                 return;
 
             try
@@ -48,6 +72,7 @@ namespace Project
             }
             catch (Exception)
             {
+                MessageBox.Show("Polja nisu lepo popunjena");
                 return;
             }
             Close();

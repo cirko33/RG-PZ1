@@ -15,6 +15,7 @@ using Win = System.Windows;
 using System.Xml.Serialization;
 using System.Windows;
 using System.Windows.Media.Animation;
+using System.Windows.Documents;
 
 namespace Project.Draw
 {
@@ -22,6 +23,8 @@ namespace Project.Draw
     {
         private static Dictionary<long, (int, int)> positionIds  = new Dictionary<long, (int, int)>();
         private static List<LineEntity> linesForSecond = new List<LineEntity>();
+        private static (Ellipse, Ellipse) entityClicked = (null, null);
+        private static (Brush, Brush) entityClickedBrush = (null, null);
         public static MainWindow Window { get; set; }
 
         private static (int, int) ChangePosition(int x, int y)
@@ -59,7 +62,8 @@ namespace Project.Draw
                     Height = 2,
                     Stroke = Brushes.Black,
                     StrokeThickness = 0.2,
-                    ToolTip = $"ID: {entity.Id}\nName: {entity.Name}\nType: "
+                    ToolTip = $"ID: {entity.Id}\nName: {entity.Name}\nType: ",
+                    Tag = entity.Id.ToString()
                 };
                 if (entity.GetType() == typeof(NodeEntity))
                 {
@@ -83,8 +87,8 @@ namespace Project.Draw
                     (x, y) = ChangePosition(x, y);
 
                 positionIds[entity.Id] = (x, y);
-                Canvas.SetLeft(ellipse, x * PM.Move);
-                Canvas.SetTop(ellipse, y * PM.Move);
+                Canvas.SetTop(ellipse, x * PM.MoveX);
+                Canvas.SetLeft(ellipse, y * PM.MoveY);
                 Window.MainCanvas.Children.Add(ellipse);
             });
         }
@@ -101,7 +105,28 @@ namespace Project.Draw
         }
         private static (int, int) MapXY(double x, double y)
         {
-            return ((int)Math.Floor((x - PM.MinX) * PM.OffsetX), (int)Math.Floor((y - PM.MinY) * PM.OffsetY));
+            return ((int)Math.Floor((PM.MaxX - x) * PM.OffsetX), (int)Math.Floor((y - PM.MinY) * PM.OffsetY));
+        }
+
+        private static void AddToStoryboard(Storyboard storyboard, Ellipse ellipse)
+        {
+            var time = new Duration(TimeSpan.FromSeconds(1));
+            var scaleX = new DoubleAnimation { To = 2.0, Duration = time };
+            ellipse.RenderTransform = new ScaleTransform { ScaleX = 1 };
+            Storyboard.SetTarget(scaleX, ellipse);
+            Storyboard.SetTargetProperty(scaleX, new PropertyPath("(Ellipse.RenderTransform).(ScaleTransform.ScaleX)"));
+            storyboard.Children.Add(scaleX);
+
+            var scaleY = new DoubleAnimation { To = 2.0, Duration = time };
+            ellipse.RenderTransform = new ScaleTransform { ScaleY = 1 };
+            Storyboard.SetTarget(scaleY, ellipse);
+            Storyboard.SetTargetProperty(scaleY, new PropertyPath("(Ellipse.RenderTransform).(ScaleTransform.ScaleY)"));
+            storyboard.Children.Add(scaleY);
+
+            var color = new ColorAnimation { To = Colors.Azure, Duration = time };
+            Storyboard.SetTarget(color, ellipse);
+            Storyboard.SetTargetProperty(color, new PropertyPath("(Shape.Fill).(SolidColorBrush.Color)"));
+            storyboard.Children.Add(color);
         }
         private static void DrawLineCanvas(LineEntity line, List<(int,int)> points)
         {
@@ -113,16 +138,52 @@ namespace Project.Draw
                     StrokeThickness = 0.4,
                     ToolTip = $"ID: {line.Id}\nName: {line.Name}"
                 };
+                path.MouseRightButtonUp += (s, e) =>
+                {
+                    Ellipse first = null, second = null;
+                    foreach (var item in Window.MainCanvas.Children)
+                    {
+                        if(item is Ellipse)
+                        {
+                            var el = (Ellipse)item;
+                            if (el.Tag.ToString() == line.FirstEnd.ToString())
+                                first = el;
+                            else if (el.Tag.ToString() == line.SecondEnd.ToString())
+                                second = el;
+                        }
+                        if (first != null && second != null)
+                            break;
+                    }
+                    if(first != null && second != null)
+                    {
+                        if(entityClicked.Item1 != null)
+                        {
+                            entityClicked.Item1.Fill = entityClickedBrush.Item1;
+                            entityClicked.Item2.Fill = entityClickedBrush.Item2;
+
+                            entityClicked.Item1.RenderTransform = new ScaleTransform { ScaleY = 1, ScaleX = 1 };
+                            entityClicked.Item2.RenderTransform = new ScaleTransform { ScaleY = 1, ScaleX = 1 };
+                        }
+
+                        entityClicked = (first, second);
+                        entityClickedBrush = (first.Fill.CloneCurrentValue(), second.Fill.CloneCurrentValue());
+                        
+                        var storyboard = new Storyboard();
+                        AddToStoryboard(storyboard, first);
+                        AddToStoryboard(storyboard, second);
+                        storyboard.Begin();
+                    }
+                };
                 var geometry = new PathGeometry();
                 var figure = new PathFigure
                 {
-                    StartPoint = new Win.Point(points.First().Item1 * PM.Move + PM.Move / 2,
-                    points.First().Item2 * PM.Move + PM.Move / 2)
+                    StartPoint = new Win.Point(points.First().Item2 * PM.MoveY + PM.MoveY / 2,
+                        points.First().Item1 * PM.MoveX + PM.MoveX / 2)
                 };
 
                 for (int i = 1; i < points.Count; i++)
-                    figure.Segments.Add(new LineSegment(new Win.Point(points[i].Item1 * PM.Move + PM.Move / 2, 
-                        points[i].Item2 * PM.Move + PM.Move / 2), true));
+                    figure.Segments.Add(new LineSegment(new Win.Point(points[i].Item2 * PM.MoveY + PM.MoveY / 2, 
+                        points[i].Item1 * PM.MoveX + PM.MoveX / 2), true));
 
                 geometry.Figures.Add(figure);
                 path.Data = geometry;
@@ -169,8 +230,8 @@ namespace Project.Draw
                     StrokeThickness = 0.3,
                     Fill = Brushes.Purple,
                 };
-                Canvas.SetLeft(ellipse, mark.Item1 * PM.Move + .5);
-                Canvas.SetTop(ellipse, mark.Item2 * PM.Move + .5);
+                Canvas.SetTop(ellipse, mark.Item1 * PM.MoveX + .5);
+                Canvas.SetLeft(ellipse, mark.Item2 * PM.MoveY + .5);
                 Window.MainCanvas.Children.Add(ellipse);
             }
         }

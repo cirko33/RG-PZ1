@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Project"
         mc:Ignorable="d"
-        Title="RACUNARSKA GRAFIKA PZ1" Height="800" Width="1000">
+        Title="RACUNARSKA GRAFIKA PZ1" Height="1000" Width="1500">
     <DockPanel>
         <Menu DockPanel.Dock="Top" BorderBrush="Gray" BorderThickness="0.3">
             <Menu.Resources>
@@ -18,9 +18,9 @@
             <MenuItem x:Name="DrawEllipseMenu" Header="Draw Ellipse" Click="DrawEllipseMenu_Click"/>
             <MenuItem x:Name="DrawPolygonMenu" Header="Draw Polygon" Click="DrawPolygonMenu_Click"/>
             <MenuItem x:Name="AddTextMenu" Header="Add text" Click="AddTextMenu_Click"/>
-            <MenuItem Header="Undo" Command="ApplicationCommands.Undo"/>
-            <MenuItem Header="Redo" Command="ApplicationCommands.Redo"/>
-            <MenuItem Header="Clear" Command="{Binding ClearCommand}"/>
+            <MenuItem x:Name="Undo" Header="Undo" Click="Undo_Click"/>
+            <MenuItem x:Name="Redo" Header="Redo" Click="Redo_Click"/>
+            <MenuItem x:Name="Clear" Header="Clear" Click="Clear_Click  "/>
         </Menu>
         <Slider x:Name="Zoom" Minimum="0.1" Maximum="10" Value="1" DockPanel.Dock="Left">
             <Slider.LayoutTransform>

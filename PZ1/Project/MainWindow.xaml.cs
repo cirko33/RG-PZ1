@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows;
@@ -26,50 +27,77 @@ namespace Project
     public partial class MainWindow : Window
     {
         private List<Win.Point> currentPolygonLines = new List<Win.Point>();
+        private List<Command> ClearHistory = new List<Command>();
+        private List<Command> RedoHistory = new List<Command>();
+        private List<Command> UndoHistory = new List<Command>();
+        private bool isCleared = false;
         public MainWindow()
         {
             InitializeComponent();
+            Undo.IsEnabled = false;
+            Redo.IsEnabled = false;
+            Clear.IsEnabled = false;
+        }
 
-            PM.Size = 300;
-            PM.Move = 3;
-            DrawingHelper.Window = this;
-        }
-        private void DrawEllipseMouseUp(object sender, MouseButtonEventArgs e)
-        {
-            MainCanvas.MouseRightButtonDown -= DrawEllipseMouseUp;
-            var position = e.GetPosition(MainCanvas);
-            var de = new DrawEllipse();
-            de.ShowDialog();
-            
-            var c = new Grid();
-            var ellipse = new Ellipse
-            {
-                Stroke = de.Stroke,
-                Fill = de.Fill,
-                StrokeThickness = de.StrokeThickness,
-                Width = de.RadiusX,
-                Height = de.RadiusY
-            };
-            c.Background = Brushes.Transparent;
-            c.Children.Add(ellipse);
-            if(!string.IsNullOrEmpty(de.Text))
-            {
-                var text = new TextBlock 
-                { 
-                    Text = de.Text, 
-                    Foreground = de.TextColor, 
-                    HorizontalAlignment =  HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center
-                };
-                c.Children.Add(text);
-            }
-            MainCanvas.Children.Add(c);
-        }
+        #region Ellipse,Polygon,Text
         private void DrawEllipseMenu_Click(object sender, RoutedEventArgs e)
         {
             MainCanvas.MouseRightButtonUp += DrawEllipseMouseUp;
         }
+        private void DrawEllipseMouseUp(object sender, MouseButtonEventArgs e)
+        {
+            MainCanvas.MouseRightButtonUp -= DrawEllipseMouseUp;
+            var position = e.GetPosition(MainCanvas);
+            var drawEllipse = new DrawEllipse();
+            drawEllipse.ShowDialog();
+            if (drawEllipse.Stroke == null)
+                return;
+            var grid = new Grid { Background = Brushes.Transparent };
+            var ellipse = new Ellipse
+            {
+                Stroke = drawEllipse.Stroke,
+                Fill = drawEllipse.Fill,
+                StrokeThickness = drawEllipse.StrokeThickness,
+                Width = drawEllipse.RadiusX,
+                Height = drawEllipse.RadiusY,
+            };
+            var text = new TextBlock
+            {
+                Text = drawEllipse.Text,
+                Foreground = drawEllipse.TextColor,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
 
+            ellipse.MouseRightButtonUp += (s, ee) =>
+            {
+                var de = new DrawEllipse(ellipse, text);
+                de.ShowDialog();
+            };
+            text.MouseRightButtonUp += (s, ee) =>
+            {
+                var de = new DrawEllipse(ellipse, text);
+                de.ShowDialog();
+            };
+
+            grid.Children.Add(ellipse);
+            grid.Children.Add(text);
+            Canvas.SetLeft(grid, position.X);
+            Canvas.SetTop(grid, position.Y);
+            MainCanvas.Children.Add(grid);
+            UndoHistory.Add(new Command 
+            { 
+                Undo = () => { MainCanvas.Children.Remove(grid); },
+                Redo = () => { MainCanvas.Children.Add(grid); }
+            });
+            UpdateEnables();
+        }
+        private void DrawPolygonMenu_Click(object sender, RoutedEventArgs e)
+        {
+            currentPolygonLines.Clear();
+            MainCanvas.MouseRightButtonUp += AddPolygonPoints;
+            MainCanvas.MouseLeftButtonUp += DrawPolygon;
+        }
         private void AddPolygonPoints(object sender, MouseButtonEventArgs e)
         {
             currentPolygonLines.Add(Mouse.GetPosition(MainCanvas));
@@ -79,76 +107,151 @@ namespace Project
             MainCanvas.MouseRightButtonUp -= AddPolygonPoints;
             MainCanvas.MouseLeftButtonUp -= DrawPolygon;
 
-            if(currentPolygonLines.Count < 3)
+            if (currentPolygonLines.Count < 3)
             {
                 currentPolygonLines.Clear();
                 MessageBox.Show("Mora biti najmanje 3 tacke za poligon.");
                 return;
             }
 
-            var dp = new DrawPolygon();
-            dp.ShowDialog();
+            var drawPolygon = new DrawPolygon();
+            drawPolygon.ShowDialog();
 
-            var c = new Grid();
+            var grid = new Grid { Background = Brushes.Transparent };
             var polygon = new Polygon
             {
-                Stroke = dp.Stroke,
-                Fill = dp.Fill,
-                StrokeThickness = dp.StrokeThickness,
+                Stroke = drawPolygon.Stroke,
+                Fill = drawPolygon.Fill,
+                StrokeThickness = drawPolygon.StrokeThickness,
                 Points = new PointCollection(currentPolygonLines)
             };
             currentPolygonLines.Clear();
-            c.Background = Brushes.Transparent;
-            c.Children.Add(polygon);
-            if (!string.IsNullOrEmpty(dp.Text))
+            var text = new TextBlock
             {
-                var text = new TextBlock
-                {
-                    Text = dp.Text,
-                    Foreground = dp.TextColor,
-                    HorizontalAlignment = HorizontalAlignment.Center,
-                    VerticalAlignment = VerticalAlignment.Center
-                };
-                c.Children.Add(text);
-            }
-            MainCanvas.Children.Add(c);
-        }
-        private void DrawPolygonMenu_Click(object sender, RoutedEventArgs e)
-        {
-            currentPolygonLines.Clear();
-            MainCanvas.MouseRightButtonUp += AddPolygonPoints;
-            MainCanvas.MouseLeftButtonUp += DrawPolygon;
-        }
+                Text = drawPolygon.Text,
+                Foreground = drawPolygon.TextColor,
+                HorizontalAlignment = HorizontalAlignment.Center,
+                VerticalAlignment = VerticalAlignment.Center
+            };
 
-        private void LoadModel_Click(object sender, RoutedEventArgs e)
-        {
-            Importer.Load();
-            Importer.MinMaxFinder();
-            DrawingHelper.DrawEntities();
-            DrawingHelper.DrawLines();
-        }
+            polygon.MouseRightButtonUp += (s, ee) =>
+            {
+                var dp = new DrawPolygon(polygon, text);
+                dp.ShowDialog();
+            };
+            text.MouseRightButtonUp += (s, ee) =>
+            {
+                var dp = new DrawPolygon(polygon, text);
+                dp.ShowDialog();
+            };
 
+            grid.Children.Add(polygon);
+            grid.Children.Add(text);
+            MainCanvas.Children.Add(grid);
+            UndoHistory.Add(new Command
+            {
+                Undo = () => { MainCanvas.Children.Remove(grid); },
+                Redo = () => { MainCanvas.Children.Add(grid); }
+            });
+            UpdateEnables();
+        }
         private void AddTextMenu_Click(object sender, RoutedEventArgs e)
         {
             MainCanvas.MouseRightButtonUp += AddTextButtonDown;
         }
-
         private void AddTextButtonDown(object sender, MouseButtonEventArgs e)
         {
             MainCanvas.MouseRightButtonUp -= AddTextButtonDown;
 
-            var at = new AddText();
+            var addText = new AddText();
             var position = e.GetPosition(MainCanvas);
-            at.ShowDialog();
+            addText.ShowDialog();
 
             var text = new TextBlock
             {
-                Text = at.Text,
-                Foreground = at.TextColor,
-                FontSize = at.TextSize
+                Text = addText.Text,
+                Foreground = addText.TextColor,
+                FontSize = addText.TextSize
             };
-            
+            text.MouseRightButtonUp += (s, ee) => 
+            {
+                var at = new AddText(text);
+                at.ShowDialog();
+            };
+            Canvas.SetLeft(text, position.X);
+            Canvas.SetTop(text, position.Y);
             MainCanvas.Children.Add(text);
+            UndoHistory.Add(new Command
+            {
+                Undo = () => { MainCanvas.Children.Remove(text); },
+                Redo = () => { MainCanvas.Children.Add(text); }
+            });
+            UpdateEnables();
+        }
+        #endregion
+
+        #region Undo,Redo,Clear
+        private void Undo_Click(object sender, RoutedEventArgs e)
+        {
+            if (isCleared)
+            {
+                ClearHistory.ForEach(t => t.Redo());
+                UndoHistory.AddRange(ClearHistory);
+                ClearHistory.Clear();
+
+                isCleared = false;
+            }
+            else if (UndoHistory.Count > 0)
+            {
+                var command = UndoHistory.Last();
+                UndoHistory.Remove(command);
+                command.Undo();
+                RedoHistory.Add(command);
+            }
+            UpdateEnables();
+        }
+        private void Redo_Click(object sender, RoutedEventArgs e)
+        {
+            if (RedoHistory.Count > 0)
+            {
+                var command = RedoHistory.Last();
+                RedoHistory.Remove(command);
+                command.Redo();
+                UndoHistory.Add(command);
+            }
+            UpdateEnables();
+        }
+        private void Clear_Click(object sender, RoutedEventArgs e)
+        {
+            ClearHistory.AddRange(UndoHistory);
+            UndoHistory.ForEach(t => t.Undo());
+            UndoHistory.Clear();
+
+            isCleared = true;
+            UpdateEnables();
+        }
+        private void UpdateEnables()
+        {
+            Undo.IsEnabled = UndoHistory.Count > 0 || ClearHistory.Count > 0;
+            Redo.IsEnabled = RedoHistory.Count > 0;
+            Clear.IsEnabled = UndoHistory.Count > 0;
+        }
+        #endregion
+        private void LoadModel_Click(object sender, RoutedEventArgs e)
+        {
+            PM.Size = 300;
+            PM.MoveX = 3;
+            PM.MoveY = 3;
+            DrawingHelper.Window = this;
+            Importer.Load();
+            Importer.MinMaxFinder();
+            DrawingHelper.DrawEntities();
+            DrawingHelper.DrawLines();
+
+            Entities.Lines.Clear();
+            Entities.Nodes.Clear();
+            Entities.Switches.Clear();
+            Entities.Substations.Clear();
         }
     }
 }
