@@ -15,7 +15,7 @@ using System.Windows.Shapes;
 namespace Project
 {
     /// <summary>
-    /// Interaction logic for DrawPolygon.xaml
+    /// Interaction logic for DrawPolygonMouseUp.xaml
     /// </summary>
     public partial class DrawPolygon : Window
     {
@@ -37,6 +37,7 @@ namespace Project
         public DrawPolygon(Polygon polygon, TextBlock text)
         {
             InitializeComponent();
+            drawPolygonButton.Content = "Edit";
             p = polygon;
             tb = text;
             strokeThickness.Text = polygon.StrokeThickness.ToString();

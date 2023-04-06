@@ -92,6 +92,7 @@ namespace Project.Draw
 
                 visited[last.Item1, last.Item2] = true;
 
+                bool neighborHit = false;
                 foreach (var neighbor in GetNeighbors(last))
                 {
                     if (neighbor == end)
@@ -101,33 +102,27 @@ namespace Project.Draw
                         return (marks, FilterAndFillMap(path));
                     }
 
-                    if (!visited[neighbor.Item1, neighbor.Item2] /*&& !map[neighbor.Item1, neighbor.Item2]*/)
+                    if (!visited[neighbor.Item1, neighbor.Item2] && !map[neighbor.Item1, neighbor.Item2])
                     {
+                        neighborHit = true;
                         List<(int, int)> newPath = new List<(int, int)>(path);
                         newPath.Add(neighbor);
                         queue.Enqueue(newPath);
                     }
                 }
 
-                //if(queue.Count == 0)
-                //{
-                //    foreach (var neighbor in GetNeighbors(last))
-                //    {
-                //        if (neighbor == end)
-                //        {
-                //            path.Add(neighbor);
-                //            var marks = AddMarks(path);
-                //            return (marks, FilterAndFillMap(path));
-                //        }
-
-                //        if (!visited[neighbor.Item1, neighbor.Item2])
-                //        {
-                //            List<(int, int)> newPath = new List<(int, int)>(path);
-                //            newPath.Add(neighbor);
-                //            queue.Enqueue(newPath);
-                //        }
-                //    }
-                //}
+                if(!neighborHit)
+                {
+                    foreach (var neighbor in GetNeighbors(last))
+                    {
+                        if (!visited[neighbor.Item1, neighbor.Item2])
+                        {
+                            List<(int, int)> newPath = new List<(int, int)>(path);
+                            newPath.Add(neighbor);
+                            queue.Enqueue(newPath);
+                        }
+                    }
+                }
             }
             return (null, null);
         }

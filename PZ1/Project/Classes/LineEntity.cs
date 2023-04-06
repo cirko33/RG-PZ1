@@ -18,7 +18,6 @@ namespace Project.Classes
         private long thermalConstantHeat;
         private long firstEnd;
         private long secondEnd;
-        private List<Point> vertices = new List<Point>();
 
         public LineEntity() { }
 
@@ -31,6 +30,5 @@ namespace Project.Classes
         public long ThermalConstantHeat { get => thermalConstantHeat; set => thermalConstantHeat = value; }
         public long FirstEnd { get => firstEnd; set => firstEnd = value; }
         public long SecondEnd { get => secondEnd; set => secondEnd = value; }
-        public List<Point> Vertices { get => vertices; set => vertices = value; }
     }
 }

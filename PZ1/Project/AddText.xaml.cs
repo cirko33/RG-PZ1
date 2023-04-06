@@ -35,6 +35,7 @@ namespace Project
         public AddText(TextBlock text)
         {
             InitializeComponent();
+            addText.Content = "Edit";
             tb = text;
             textColor.SelectedColor = ((SolidColorBrush)text.Foreground).Color;
             textBox.Text = text.Text;
@@ -59,7 +60,7 @@ namespace Project
                 Text = textBox.Text;
                 TextColor = new SolidColorBrush(textColor.SelectedColor ?? Colors.Black);
                 TextSize = double.Parse(textSize.Text);
-                if (TextSize < 0)
+                if (TextSize < 0 || string.IsNullOrEmpty(Text))
                     throw new Exception();
             }
             catch (Exception)

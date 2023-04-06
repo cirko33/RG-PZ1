@@ -39,6 +39,7 @@ namespace Project
         public DrawEllipse(Ellipse e, TextBlock t)
         {
             InitializeComponent();
+            drawEllipseButton.Content = "Edit";
             el = e;
             tb = t;
             radiusX.Text = e.Width.ToString();

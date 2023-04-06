@@ -16,6 +16,7 @@ using System.Xml.Serialization;
 using System.Windows;
 using System.Windows.Media.Animation;
 using System.Windows.Documents;
+using System.Runtime.InteropServices.WindowsRuntime;
 
 namespace Project.Draw
 {
@@ -26,7 +27,7 @@ namespace Project.Draw
         private static (Ellipse, Ellipse) entityClicked = (null, null);
         private static (Brush, Brush) entityClickedBrush = (null, null);
         public static MainWindow Window { get; set; }
-
+        private static List<(long, long)> linesDrawn  = new List<(long, long)>();
         private static (int, int) ChangePosition(int x, int y)
         {
             
@@ -193,7 +194,7 @@ namespace Project.Draw
         }
         private static void CalculateAndDrawLine1(LineEntity line)
         {
-            if (!positionIds.ContainsKey(line.FirstEnd) || !positionIds.ContainsKey(line.SecondEnd))
+            if (linesDrawn.Contains((line.FirstEnd, line.SecondEnd)) || linesDrawn.Contains((line.SecondEnd, line.FirstEnd)))
                 return;
 
             var start = positionIds[line.FirstEnd];
@@ -211,6 +212,8 @@ namespace Project.Draw
         {
             if (!positionIds.ContainsKey(line.FirstEnd) || !positionIds.ContainsKey(line.SecondEnd))
                 return;
+
+            linesDrawn.Add((line.FirstEnd, line.SecondEnd));
 
             var start = positionIds[line.FirstEnd];
             var end = positionIds[line.SecondEnd];
@@ -237,7 +240,15 @@ namespace Project.Draw
         }
         public static void DrawLines()
         {
-            foreach (var line in Entities.Lines)
+            var lines = Entities.Lines.FindAll(t => positionIds.ContainsKey(t.FirstEnd) && positionIds.ContainsKey(t.SecondEnd))
+                .OrderBy(t => {
+                    var start = positionIds[t.FirstEnd];
+                    var end = positionIds[t.SecondEnd];
+                
+                    return Math.Sqrt(Math.Pow(start.Item1 - end.Item1, 2) +  Math.Pow(start.Item2 - end.Item2, 2));
+                });
+
+            foreach (var line in lines)
             {
                 CalculateAndDrawLine1(line);
             }
@@ -246,6 +257,10 @@ namespace Project.Draw
             {
                 CalculateAndDrawLine2(line);
             }
+
+            linesForSecond.Clear();
+            positionIds.Clear();
+            linesDrawn.Clear();
         }
     }
 }

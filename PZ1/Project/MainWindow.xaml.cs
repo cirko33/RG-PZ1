@@ -42,6 +42,9 @@ namespace Project
         #region Ellipse,Polygon,Text
         private void DrawEllipseMenu_Click(object sender, RoutedEventArgs e)
         {
+            MainCanvas.MouseRightButtonUp -= DrawPolygonMouseUp;
+            MainCanvas.MouseRightButtonUp -= AddTextMouseUp;
+            MainCanvas.MouseLeftButtonUp -= AddPolygonPoints;
             MainCanvas.MouseRightButtonUp += DrawEllipseMouseUp;
         }
         private void DrawEllipseMouseUp(object sender, MouseButtonEventArgs e)
@@ -94,18 +97,20 @@ namespace Project
         }
         private void DrawPolygonMenu_Click(object sender, RoutedEventArgs e)
         {
+            MainCanvas.MouseRightButtonUp -= AddTextMouseUp;
+            MainCanvas.MouseRightButtonUp -= DrawEllipseMouseUp;
             currentPolygonLines.Clear();
             MainCanvas.MouseRightButtonUp += AddPolygonPoints;
-            MainCanvas.MouseLeftButtonUp += DrawPolygon;
+            MainCanvas.MouseLeftButtonUp += DrawPolygonMouseUp;
         }
         private void AddPolygonPoints(object sender, MouseButtonEventArgs e)
         {
             currentPolygonLines.Add(Mouse.GetPosition(MainCanvas));
         }
-        private void DrawPolygon(object sender, MouseButtonEventArgs e)
+        private void DrawPolygonMouseUp(object sender, MouseButtonEventArgs e)
         {
             MainCanvas.MouseRightButtonUp -= AddPolygonPoints;
-            MainCanvas.MouseLeftButtonUp -= DrawPolygon;
+            MainCanvas.MouseLeftButtonUp -= DrawPolygonMouseUp;
 
             if (currentPolygonLines.Count < 3)
             {
@@ -117,7 +122,7 @@ namespace Project
             var drawPolygon = new DrawPolygon();
             drawPolygon.ShowDialog();
 
-            var grid = new Grid { Background = Brushes.Transparent };
+            var canvas = new Canvas { Background = Brushes.Transparent };
             var polygon = new Polygon
             {
                 Stroke = drawPolygon.Stroke,
@@ -125,6 +130,8 @@ namespace Project
                 StrokeThickness = drawPolygon.StrokeThickness,
                 Points = new PointCollection(currentPolygonLines)
             };
+            double minX = currentPolygonLines.Min(p => p.X), maxX = currentPolygonLines.Max(p => p.X),
+                minY = currentPolygonLines.Min(p => p.Y), maxY = currentPolygonLines.Max(p => p.Y);
             currentPolygonLines.Clear();
             var text = new TextBlock
             {
@@ -134,34 +141,43 @@ namespace Project
                 VerticalAlignment = VerticalAlignment.Center
             };
 
-            polygon.MouseRightButtonUp += (s, ee) =>
-            {
-                var dp = new DrawPolygon(polygon, text);
-                dp.ShowDialog();
-            };
             text.MouseRightButtonUp += (s, ee) =>
             {
                 var dp = new DrawPolygon(polygon, text);
                 dp.ShowDialog();
             };
 
-            grid.Children.Add(polygon);
-            grid.Children.Add(text);
-            MainCanvas.Children.Add(grid);
+            polygon.MouseRightButtonUp += (s, ee) =>
+            {
+                var dp = new DrawPolygon(polygon, text);
+                dp.ShowDialog();
+            };
+
+            Canvas.SetZIndex(polygon, 1);
+            Canvas.SetZIndex(text, 2);
+            Canvas.SetLeft(text, minX + (maxX - minX)/2);
+            Canvas.SetTop(text, minY + (maxY - minY)/2);
+            canvas.Children.Add(polygon);
+            canvas.Children.Add(text);
+            MainCanvas.Children.Add(canvas);
+            
             UndoHistory.Add(new Command
             {
-                Undo = () => { MainCanvas.Children.Remove(grid); },
-                Redo = () => { MainCanvas.Children.Add(grid); }
+                Undo = () => { MainCanvas.Children.Remove(canvas);},
+                Redo = () => { MainCanvas.Children.Add(canvas); }
             });
             UpdateEnables();
         }
         private void AddTextMenu_Click(object sender, RoutedEventArgs e)
         {
-            MainCanvas.MouseRightButtonUp += AddTextButtonDown;
+            MainCanvas.MouseRightButtonUp -= DrawPolygonMouseUp;
+            MainCanvas.MouseRightButtonUp -= DrawEllipseMouseUp;
+            MainCanvas.MouseLeftButtonUp -= AddPolygonPoints;
+            MainCanvas.MouseRightButtonUp += AddTextMouseUp;
         }
-        private void AddTextButtonDown(object sender, MouseButtonEventArgs e)
+        private void AddTextMouseUp(object sender, MouseButtonEventArgs e)
         {
-            MainCanvas.MouseRightButtonUp -= AddTextButtonDown;
+            MainCanvas.MouseRightButtonUp -= AddTextMouseUp;
 
             var addText = new AddText();
             var position = e.GetPosition(MainCanvas);

@@ -97,7 +97,6 @@
     <Compile Include="Classes\Entities.cs" />
     <Compile Include="Classes\LineEntity.cs" />
     <Compile Include="Classes\NodeEntity.cs" />
-    <Compile Include="Classes\Point.cs" />
     <Compile Include="Classes\PM.cs" />
     <Compile Include="Classes\PowerEntity.cs" />
     <Compile Include="Classes\SubstationEntity.cs" />
