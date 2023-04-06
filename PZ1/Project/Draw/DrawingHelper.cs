@@ -118,7 +118,7 @@ namespace Project.Draw
             Storyboard.SetTargetProperty(scaleY, new PropertyPath("(Ellipse.RenderTransform).(ScaleTransform.ScaleY)"));
             storyboard.Children.Add(scaleY);
 
-            var color = new ColorAnimation { To = Colors.Azure, Duration = time };
+            var color = new ColorAnimation { To = Colors.DarkOrange, Duration = time };
             Storyboard.SetTarget(color, ellipse);
             Storyboard.SetTargetProperty(color, new PropertyPath("(Shape.Fill).(SolidColorBrush.Color)"));
             storyboard.Children.Add(color);
@@ -189,7 +189,7 @@ namespace Project.Draw
         private static void CalculateAndDrawLine1(LineEntity line)
         {
             if (linesDrawn.Any(t => (t.Item1 == line.FirstEnd && t.Item2 == line.SecondEnd) 
-                || (t.Item2 == line.FirstEnd && t.Item2 == line.SecondEnd)))
+                || (t.Item2 == line.FirstEnd && t.Item1 == line.SecondEnd)))
                 return;
             linesDrawn.Add((line.FirstEnd, line.SecondEnd));
 
@@ -241,6 +241,7 @@ namespace Project.Draw
                     var start = positionIds[t.FirstEnd];
                     var end = positionIds[t.SecondEnd];
                 
+                    //sqrt((x2-x1)^2 + (y2-y1)^2)
                     return Math.Sqrt(Math.Pow(start.Item1 - end.Item1, 2) +  Math.Pow(start.Item2 - end.Item2, 2));
                 });
 
