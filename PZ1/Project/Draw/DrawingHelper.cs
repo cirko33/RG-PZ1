@@ -27,6 +27,7 @@ namespace Project.Draw
         private static (Ellipse, Ellipse) entityClicked = (null, null);
         private static (Brush, Brush) entityClickedBrush = (null, null);
         public static MainWindow Window { get; set; }
+
         private static List<(long, long)> linesDrawn  = new List<(long, long)>();
         private static (int, int) ChangePosition(int x, int y)
         {
@@ -95,20 +96,13 @@ namespace Project.Draw
         }
         public static void DrawEntities()
         {
-            foreach (var node in Entities.Nodes)
-                DrawEntity(node);
-
-            foreach (var node in Entities.Switches)
-                DrawEntity(node);
-
-            foreach (var node in Entities.Substations)
+            foreach (var node in Entities.PowerEntities)
                 DrawEntity(node);
         }
         private static (int, int) MapXY(double x, double y)
         {
             return ((int)Math.Floor((PM.MaxX - x) * PM.OffsetX), (int)Math.Floor((y - PM.MinY) * PM.OffsetY));
         }
-
         private static void AddToStoryboard(Storyboard storyboard, Ellipse ellipse)
         {
             var time = new Duration(TimeSpan.FromSeconds(1));
@@ -194,8 +188,10 @@ namespace Project.Draw
         }
         private static void CalculateAndDrawLine1(LineEntity line)
         {
-            if (linesDrawn.Contains((line.FirstEnd, line.SecondEnd)) || linesDrawn.Contains((line.SecondEnd, line.FirstEnd)))
+            if (linesDrawn.Any(t => (t.Item1 == line.FirstEnd && t.Item2 == line.SecondEnd) 
+                || (t.Item2 == line.FirstEnd && t.Item2 == line.SecondEnd)))
                 return;
+            linesDrawn.Add((line.FirstEnd, line.SecondEnd));
 
             var start = positionIds[line.FirstEnd];
             var end = positionIds[line.SecondEnd];

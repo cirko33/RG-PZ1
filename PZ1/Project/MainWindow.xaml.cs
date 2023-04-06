@@ -72,12 +72,12 @@ namespace Project
                 VerticalAlignment = VerticalAlignment.Center
             };
 
-            ellipse.MouseRightButtonUp += (s, ee) =>
+            ellipse.MouseLeftButtonUp += (s, ee) =>
             {
                 var de = new DrawEllipse(ellipse, text);
                 de.ShowDialog();
             };
-            text.MouseRightButtonUp += (s, ee) =>
+            text.MouseLeftButtonUp += (s, ee) =>
             {
                 var de = new DrawEllipse(ellipse, text);
                 de.ShowDialog();
@@ -141,13 +141,13 @@ namespace Project
                 VerticalAlignment = VerticalAlignment.Center
             };
 
-            text.MouseRightButtonUp += (s, ee) =>
+            text.MouseLeftButtonUp += (s, ee) =>
             {
                 var dp = new DrawPolygon(polygon, text);
                 dp.ShowDialog();
             };
 
-            polygon.MouseRightButtonUp += (s, ee) =>
+            polygon.MouseLeftButtonUp += (s, ee) =>
             {
                 var dp = new DrawPolygon(polygon, text);
                 dp.ShowDialog();
@@ -189,7 +189,7 @@ namespace Project
                 Foreground = addText.TextColor,
                 FontSize = addText.TextSize
             };
-            text.MouseRightButtonUp += (s, ee) => 
+            text.MouseLeftButtonUp += (s, ee) => 
             {
                 var at = new AddText(text);
                 at.ShowDialog();
@@ -265,9 +265,7 @@ namespace Project
             DrawingHelper.DrawLines();
 
             Entities.Lines.Clear();
-            Entities.Nodes.Clear();
-            Entities.Switches.Clear();
-            Entities.Substations.Clear();
+            Entities.PowerEntities.Clear();
         }
     }
 }

@@ -13,7 +13,7 @@ namespace Project.Import
     {
         public static void MinMaxFinder()
         {
-            var values = new List<PowerEntity>().Concat(Entities.Switches).Concat(Entities.Nodes).Concat(Entities.Substations);
+            var values = Entities.PowerEntities;
             var doublesX = values.Select(t => t.X).ToList();
             var doublesY = values.Select(t => t.Y).ToList();
 
@@ -46,7 +46,7 @@ namespace Project.Import
                 substationEntity.X = tempX;
                 substationEntity.Y = tempY;
 
-                Entities.Substations.Add(substationEntity);
+                Entities.PowerEntities.Add(substationEntity);
             }
 
             nodeList = xml.DocumentElement.SelectNodes("/NetworkModel/Nodes/NodeEntity");
@@ -63,7 +63,7 @@ namespace Project.Import
                 nodeEntity.X = tempX;
                 nodeEntity.Y = tempY;
 
-                Entities.Nodes.Add(nodeEntity);
+                Entities.PowerEntities.Add(nodeEntity);
             }
 
             nodeList = xml.DocumentElement.SelectNodes("/NetworkModel/Switches/SwitchEntity");
@@ -81,7 +81,7 @@ namespace Project.Import
                 switchEntity.X = tempX;
                 switchEntity.Y = tempY;
 
-                Entities.Switches.Add(switchEntity);
+                Entities.PowerEntities.Add(switchEntity);
             }
 
             nodeList = xml.DocumentElement.SelectNodes("/NetworkModel/Lines/LineEntity");

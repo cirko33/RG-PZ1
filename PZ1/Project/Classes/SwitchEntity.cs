@@ -8,9 +8,6 @@ namespace Project.Classes
 {
     public class SwitchEntity : PowerEntity
     {
-        private string status;
-
-        public SwitchEntity() { }
-        public string Status { get => status; set => status = value; }
+        public string Status { get; set; }
     }
 }
